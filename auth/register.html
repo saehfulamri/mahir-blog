@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Register Account</title>
+        <link rel="stylesheet" href="../styles/register.css" />
+
+        <!-- AOS -->
+        <link
+            href="https://unpkg.com/aos@2.3.1/dist/aos.css"
+            rel="stylesheet" />
+        <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    </head>
+    <body>
+        <div class="container">
+            <div class="wrap-form" data-aos="zoom-in" data-aos-duration="1500">
+                <a href="../index.html" class="logo"><h1>Mahir Blog</h1></a>
+                <div>
+                    <h3>Create your account</h3>
+                    <form id="registerForm">
+                        <label for="email">Email</label>
+                        <input
+                            type="email"
+                            name="email"
+                            autocomplete="email"
+                            id="email"
+                            placeholder="Masukkan email" />
+                        <label for="password">Password</label>
+                        <input
+                            type="password"
+                            name="password"
+                            autocomplete="current-password"
+                            id="password"
+                            placeholder="Masukkan password" />
+                        <input type="submit" value="Register" />
+                    </form>
+                    <span class="login">
+                        Sudah punya akun? <a href="./login.html">Masuk</a>
+                    </span>
+                </div>
+            </div>
+            <div
+                class="wrap-image"
+                data-aos="zoom-in-up"
+                data-aos-duration="1500">
+                <img src="../assets/register.svg" alt="register-image" />
+            </div>
+        </div>
+        <script>
+            AOS.init();
+
+            const registerForm = document.getElementById("registerForm");
+
+            registerForm.addEventListener("submit", (event) => {
+                event.preventDefault();
+
+                const emailInput = document.getElementById("email");
+                const passwordInput = document.getElementById("password");
+
+                const email = emailInput.value.trim();
+                const password = passwordInput.value.trim();
+
+                if (email !== "" || password !== "") {
+                    const students = getStudentsFromLocalStorage();
+
+                    const cekEmail = students.some(
+                        (student) => student.email === email
+                    );
+
+                    if (cekEmail) {
+                        alert(
+                            "Pendaftaran gagal! Email sudah terdaftar, gunakan email yang lain."
+                        );
+                    } else {
+                        students.push({ email: email, password: password });
+
+                        saveStudentsToLocalStorage(students);
+                        alert("Pendaftaran berhasil");
+                        window.location.href = "/auth/login.html";
+                    }
+
+                    document.forms["registerForm"].reset();
+                }
+            });
+
+            function getStudentsFromLocalStorage() {
+                const studentsJSON = localStorage.getItem("students");
+                return studentsJSON ? JSON.parse(studentsJSON) : [];
+            }
+
+            function saveStudentsToLocalStorage(arg) {
+                localStorage.setItem("students", JSON.stringify(arg));
+            }
+
+            document.addEventListener("DOMContentLoaded", () => {
+                const userSession = getSessionFromLocalStorage();
+
+                if (userSession) {
+                    window.location.href = "../admin/dashboard.html";
+                }
+            });
+
+            function getSessionFromLocalStorage() {
+                const sessionJSON = localStorage.getItem("session");
+                return sessionJSON ? JSON.parse(sessionJSON) : null;
+            }
+        </script>
+    </body>
+</html>

@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Dashboard - Mahir Blog</title>
+        <link rel="stylesheet" href="../styles/dashboard.css" />
+        <style>
+            #sidebar h2 a {
+                padding: 0;
+                align-items: center;
+                display: flex;
+                justify-content: center;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="sidebar">
+            <h2><a href="../index.html">Mahir Blog</a></h2>
+            <a href="#">Beranda</a>
+            <a href="../admin/add-article.html">Tulis Artikel</a>
+            <a href="#">Pengaturan</a>
+            <a href="#" class="btn-logout" onclick="logOut()">Logout</a>
+        </div>
+        <div id="content">
+            <div id="navbar">
+                <div class="toggle-btn" onclick="toggleSidebar()">&#9776;</div>
+                <div class="right">
+                    <input
+                        type="text"
+                        name="search"
+                        id="search"
+                        placeholder="Cari" />
+                    <button id="logout-btn" onclick="logOut()">Logout</button>
+                </div>
+            </div>
+            <div class="content-dashboard">
+                <!-- Konten Dashboard -->
+                <h1>Selamat datang di Dashboard</h1>
+                <!-- Modal Content -->
+                <div class="modal" id="editModal">
+                    <div class="modal-content">
+                        <span class="close" onclick="closeModal()"
+                            >&times;</span
+                        >
+                        <h2>Edit Artikel</h2>
+                        <form id="editForm">
+                            <label for="title">Masukkan Judul</label>
+                            <input type="text" name="title" id="title" />
+                            <label for="author">Penulis</label>
+                            <input type="text" name="author" id="author" />
+                            <label for="date">Tanggal</label>
+                            <input type="date" name="date" id="date" />
+                            <label for="article">Tulis Artikel</label>
+                            <textarea
+                                name="article"
+                                id="article"
+                                cols="30"
+                                rows="10"></textarea>
+                            <input
+                                type="submit"
+                                onclick="saveEditedArticle()"
+                                value="Update Artikel" />
+                        </form>
+                    </div>
+                </div>
+                <!-- Table Content -->
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Judul</th>
+                                <th>Artikel</th>
+                                <th>Penulis</th>
+                                <th>Tanggal Terbit</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <script>
+            function logOut() {
+                localStorage.removeItem("session");
+                window.location.href = "../auth/login.html";
+                alert("Berhasil logout");
+            }
+
+            const modal = document.getElementById("editModal");
+            let editedIndex = -1;
+
+            function closeModal() {
+                modal.style.display = "none";
+            }
+
+            document.addEventListener("DOMContentLoaded", () => {
+                // check user session
+                const userSession = getSessionFromLocalStorage();
+                console.log(userSession);
+
+                if (!userSession) {
+                    window.location.href = "../auth/login.html";
+                    alert(
+                        "Sesi Anda telah berakhir, Anda harus login kembali!"
+                    );
+                }
+
+                const articles = getArticlesFromLocalStorage();
+                const tbody = document.getElementById("tbody");
+
+                articles.forEach((article, index) => {
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = `
+                    <td>${article.title}</td>
+                    <td>${article.article}</td>
+                    <td>${article.author}</td>
+                    <td>${article.date}</td>
+                    <td>
+                        <button onclick="editArticle(${index})">Edit</button>
+                        <button onclick="deleteArticle(${index})">Delete</button>
+                    </td>
+                    `;
+                    tbody.append(tr);
+                });
+            });
+
+            function getSessionFromLocalStorage() {
+                const sessionJSON = localStorage.getItem("session");
+                return sessionJSON ? JSON.parse(sessionJSON) : null;
+            }
+
+            function editArticle(index) {
+                modal.style.display = "block";
+
+                const articles = getArticlesFromLocalStorage();
+                editedIndex = index;
+                const editedArticle = articles[editedIndex];
+
+                document.getElementById("title").value = editedArticle.title;
+                document.getElementById("author").value = editedArticle.author;
+                document.getElementById("date").value = editedArticle.date;
+                document.getElementById("article").value =
+                    editedArticle.article;
+            }
+
+            function saveEditedArticle() {
+                const titleInput = document.getElementById("title");
+                const authorInput = document.getElementById("author");
+                const dateInput = document.getElementById("date");
+                const articleInput = document.getElementById("article");
+
+                const editedTitle = titleInput.value.trim();
+                const editedAuthor = authorInput.value.trim();
+                const editedDate = dateInput.value.trim();
+                const editedArticle = articleInput.value.trim();
+
+                if (
+                    editedTitle !== "" ||
+                    editedAuthor !== "" ||
+                    editedDate !== "" ||
+                    editedArticle !== ""
+                ) {
+                    const articles = getArticlesFromLocalStorage();
+                    articles[editedIndex] = {
+                        title: editedTitle,
+                        author: editedAuthor,
+                        date: editedDate,
+                        article: editedArticle,
+                    };
+                    saveArticlesToLocalStorage(articles);
+                    alert("Artikel berhasil diupdate");
+                } else {
+                    alert("Inputan tidak boleh kosong!");
+                }
+            }
+
+            function deleteArticle(index) {
+                const articles = getArticlesFromLocalStorage();
+                if (confirm("Apakah anda yakin ingin menghapus data ini?")) {
+                    articles.splice(index, 1);
+                    saveArticlesToLocalStorage(articles);
+                    alert("Data berhasil dihapus");
+                } else {
+                    alert("Data batal dihapus");
+                }
+            }
+
+            function saveArticlesToLocalStorage(arg) {
+                localStorage.setItem("articles", JSON.stringify(arg));
+            }
+
+            function getArticlesFromLocalStorage() {
+                const articlesJSON = localStorage.getItem("articles");
+                return articlesJSON ? JSON.parse(articlesJSON) : [];
+            }
+
+            function toggleSidebar() {
+                const sidebar = document.getElementById("sidebar");
+                const content = document.getElementById("content");
+
+                if (sidebar.style.width === "250px") {
+                    sidebar.style.width = "0px";
+                    sidebar.style.display = "none";
+                    content.style.marginLeft = "0px";
+                } else {
+                    sidebar.style.width = "250px";
+                    sidebar.style.display = "block";
+                    content.style.marginLeft = "250px";
+                }
+            }
+        </script>
+    </body>
+</html>
